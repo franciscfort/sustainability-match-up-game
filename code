@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustainability Match-Up v4.1</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: auto;
+    }
+
+    *, *::before, *::after {
+      box-sizing: inherit;
+    }
+
+    html, body, .app-wrapper {
+      height: 100%;
+      width: 100%;
+    }
+
+    .app-wrapper {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      position: relative;
+    }
+
+    /* Header Section */
+    .game-header {
+      text-align: center;
+      margin-bottom: 12px;
+      width: 100%;
+    }
+
+    .game-title {
+      font-size: 36px;
+      color: #ffffff;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+      margin: 0 0 5px 0;
+      font-weight: bold;
+    }
+
+    .level-title {
+      font-size: 20px;
+      color: #fbbf24;
+      margin: 5px 0;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* Dashboard */
+    .dashboard {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 12px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 850px;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 10px;
+      min-width: 100px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      color: #1f2937;
+      font-weight: bold;
+    }
+
+    .timer {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .timer .stat-label {
+      color: #fecaca;
+    }
+
+    .timer .stat-value {
+      color: white;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      max-width: 850px;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    /* Game Board - Mixed Grid */
+    .game-board {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto 15px;
+    }
+
+    .game-board.level-1 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .game-board.level-2 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .game-board.level-3 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    /* Card Styling */
+    .card {
+      border-radius: 10px;
+      cursor: grab;
+      position: relative;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      border: 3px solid transparent;
+      padding: 12px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .card.draggable {
+      cursor: grab;
+    }
+
+    .card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+      transform: rotate(3deg) scale(1.05);
+    }
+
+    .card:hover:not(.matched) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.3);
+    }
+
+    .card.drag-over {
+      border: 3px solid #fbbf24 !important;
+      box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+      transform: scale(1.03);
+    }
+
+    .card.matched {
+      opacity: 0.75;
+      cursor: default;
+      border: 3px solid #10b981 !important;
+    }
+
+    .card.matched::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 20px;
+      color: #10b981;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .card.matched:hover {
+      transform: none;
+    }
+
+    .card.correct-match {
+      animation: correctMatch 0.5s ease-in-out;
+      border: 3px solid #10b981 !important;
+    }
+
+    .card.wrong-match {
+      animation: shake 0.4s ease-in-out;
+      border: 3px solid #ef4444 !important;
+    }
+
+    @keyframes correctMatch {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); box-shadow: 0 0 25px rgba(16, 185, 129, 0.7); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    .card-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .card-text {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+      text-align: center;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(255,255,255,0.3);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 8px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .habit-card {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    }
+
+    .category-card {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    }
+
+    /* Feedback Toast */
+    .feedback-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(16, 185, 129, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 2000;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .feedback-toast.error {
+      background: rgba(239, 68, 68, 0.95);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateX(-50%) translateY(-100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Buttons */
+    .controls {
+      text-align: center;
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-family: inherit;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .btn-retry {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .btn-restart {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+    }
+
+    /* Messages */
+    .message-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .message-box {
+      background: white;
+      border-radius: 25px;
+      padding: 35px;
+      text-align: center;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    .message-icon {
+      font-size: 70px;
+      margin-bottom: 15px;
+    }
+
+    .message-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 15px;
+    }
+
+    .message-subtext {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    /* Confetti Animation */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: #f59e0b;
+      animation: confetti-fall 3s linear;
+    }
+
+    @keyframes confetti-fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Fireworks */
+    .firework {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: firework-burst 1s ease-out;
+    }
+
+    @keyframes firework-burst {
+      0% {
+        transform: translate(0, 0);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty));
+        opacity: 0;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .game-title {
+        font-size: 24px;
+      }
+
+      .level-title {
+        font-size: 16px;
+      }
+
+      .game-board.level-1,
+      .game-board.level-2,
+      .game-board.level-3 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .card {
+        padding: 10px;
+        min-height: 90px;
+      }
+
+      .card-icon {
+        font-size: 24px;
+      }
+
+      .card-text {
+        font-size: 10px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card-text {
+        font-size: 9px;
+      }
+
+      .card-icon {
+        font-size: 20px;
+      }
+
+      .game-board.level-1,
+      .game-board.level-2,
+      .game-board.level-3 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-wrapper">
+   <header class="game-header">
+    <h1 class="game-title" id="gameTitle">Sustainability Match-Up v4.1</h1>
+    <div class="level-title" id="levelTitle">
+     Level 1: Foundation
+    </div>
+   </header>
+   <div class="dashboard">
+    <div class="stat-box">
+     <div class="stat-label">
+      Level
+     </div>
+     <div class="stat-value" id="currentLevel">
+      1
+     </div>
+    </div>
+    <div class="stat-box timer">
+     <div class="stat-label">
+      Time Left
+     </div>
+     <div class="stat-value" id="timer">
+      2:00
+     </div>
+    </div>
+    <div class="stat-box">
+     <div class="stat-label">
+      Matches
+     </div>
+     <div class="stat-value">
+      <span id="matches">0</span>/<span id="totalMatches">5</span>
+     </div>
+    </div>
+   </div>
+   <div class="progress-container">
+    <div class="progress-bar">
+     <div class="progress-fill" id="progressFill" style="width: 0%">
+      0%
+     </div>
+    </div>
+   </div>
+   <div class="game-board level-1" id="gameBoard"></div>
+   <div class="controls"><button class="btn btn-start" id="startBtn">Start Game</button> <button class="btn btn-restart" id="restartBtn" style="display:none;">Restart Level</button>
+   </div>
+   <div class="message-overlay" id="messageOverlay">
+    <div class="message-box">
+     <div class="message-icon" id="messageIcon">
+      🎉
+     </div>
+     <div class="message-text" id="messageText">
+      Level Complete!
+     </div>
+     <div class="message-subtext" id="messageSubtext">
+      Great job! Ready for the next challenge?
+     </div><button class="btn btn-next" id="actionBtn">Next Level</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // ===== CONFIGURATION =====
+    const defaultConfig = {
+      game_title: "Sustainability Match-Up v4.1",
+      level_1_title: "Level 1: Foundation",
+      level_2_title: "Level 2: Intermediate",
+      level_3_title: "Level 3: Advanced",
+      start_button_text: "Start Game",
+      next_level_button_text: "Next Level",
+      try_again_button_text: "Try Again",
+      champion_message: "Climate Champion!",
+      game_over_message: "Time's Up!",
+      background_color: "#667eea",
+      habit_card_color: "#3b82f6",
+      category_card_color: "#10b981",
+      button_color: "#10b981",
+      timer_color: "#ef4444"
+    };
+
+    // ===== GAME DATA =====
+    const levelsData = {
+      1: {
+        time: 120,
+        cards: [
+          { id: 1, type: 'habit', icon: '♻️', text: 'Recycling plastic bottles', match: 'recycling', feedback: 'Correct! Recycling keeps plastic out of landfills and oceans.' },
+          { id: 2, type: 'category', icon: '♻️', text: 'Recycling', match: 'recycling' },
+          { id: 3, type: 'habit', icon: '🗑️', text: 'Sorting household waste', match: 'segregation', feedback: 'Great! Waste segregation helps recycle materials properly.' },
+          { id: 4, type: 'category', icon: '🗄️', text: 'Waste Segregation', match: 'segregation' },
+          { id: 5, type: 'habit', icon: '🥬', text: 'Composting food scraps', match: 'organic', feedback: 'Excellent! Composting returns nutrients to soil and reduces methane.' },
+          { id: 6, type: 'category', icon: '🌾', text: 'Organic Waste Management', match: 'organic' },
+          { id: 7, type: 'habit', icon: '👕', text: 'Buying second-hand clothes', match: 'circular', feedback: 'Perfect! Reusing products reduces demand for new manufacturing.' },
+          { id: 8, type: 'category', icon: '🔄', text: 'Circular Economy', match: 'circular' },
+          { id: 9, type: 'habit', icon: '💡', text: 'Turning off unused lights', match: 'energy', feedback: 'Correct! Simple actions save energy and reduce carbon emissions.' },
+          { id: 10, type: 'category', icon: '⚡', text: 'Energy Efficiency', match: 'energy' }
+        ]
+      },
+      2: {
+        time: 90,
+        cards: [
+          { id: 11, type: 'habit', icon: '☀️', text: 'Using solar lamps', match: 'renewable', feedback: 'Great! Solar energy is clean, renewable, and reduces fossil fuel use.' },
+          { id: 12, type: 'category', icon: '🌞', text: 'Renewable Energy', match: 'renewable' },
+          { id: 13, type: 'habit', icon: '🔥', text: 'Using clean cookstoves', match: 'cooking', feedback: 'Excellent! Clean cookstoves reduce indoor air pollution and save fuel.' },
+          { id: 14, type: 'category', icon: '🍳', text: 'Clean Cooking Solutions', match: 'cooking' },
+          { id: 15, type: 'habit', icon: '🌧️', text: 'Harvesting rainwater', match: 'water', feedback: 'Perfect! Rainwater harvesting conserves water and reduces runoff.' },
+          { id: 16, type: 'category', icon: '💧', text: 'Water Conservation', match: 'water' },
+          { id: 17, type: 'habit', icon: '🚌', text: 'Taking public transport', match: 'lowcarbon', feedback: 'Correct! Shared transport reduces per-person carbon emissions.' },
+          { id: 18, type: 'category', icon: '🚍', text: 'Low-Carbon Transport', match: 'lowcarbon' },
+          { id: 19, type: 'habit', icon: '🚲', text: 'Cycling to work', match: 'active', feedback: 'Great! Active transport has zero emissions and improves health.' },
+          { id: 20, type: 'category', icon: '🚴', text: 'Active Transport', match: 'active' }
+        ]
+      },
+      3: {
+        time: 60,
+        cards: [
+          { id: 21, type: 'habit', icon: '🌳', text: 'Planting trees', match: 'nature', feedback: 'Excellent! Trees absorb CO2, cool cities, and support biodiversity.' },
+          { id: 22, type: 'category', icon: '🌿', text: 'Nature-Based Solutions', match: 'nature' },
+          { id: 23, type: 'habit', icon: '🌲', text: 'Agroforestry practices', match: 'sequestration', feedback: 'Perfect! Agroforestry captures carbon while producing food.' },
+          { id: 24, type: 'category', icon: '🌍', text: 'Carbon Sequestration', match: 'sequestration' },
+          { id: 25, type: 'habit', icon: '🛍️', text: 'Using reusable bags', match: 'consumption', feedback: 'Correct! Reducing single-use items cuts waste and resource use.' },
+          { id: 26, type: 'category', icon: '♻️', text: 'Sustainable Consumption', match: 'consumption' },
+          { id: 27, type: 'habit', icon: '📢', text: 'Advocating for climate policies', match: 'advocacy', feedback: 'Great! Policy change drives systemic climate action.' },
+          { id: 28, type: 'category', icon: '🎯', text: 'Climate Advocacy', match: 'advocacy' },
+          { id: 29, type: 'habit', icon: '🚜', text: 'Mulching & soil-cover farming', match: 'agriculture', feedback: 'Excellent! These practices improve soil health and store carbon.' },
+          { id: 30, type: 'category', icon: '🌽', text: 'Climate-Smart Agriculture', match: 'agriculture' }
+        ]
+      }
+    };
+
+    let currentLevel = 1;
+    let timeLeft = 120;
+    let timerInterval = null;
+    let matchedPairs = 0;
+    let totalPairs = 5;
+    let gameActive = false;
+    let allCards = [];
+    let draggedElement = null;
+    let matchedCardIds = new Set();
+
+    // ===== SOUND EFFECTS (Using Web Audio API) =====
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (type === 'correct') {
+          oscillator.frequency.value = 800;
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.2);
+        } else if (type === 'wrong') {
+          oscillator.frequency.value = 200;
+          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+        } else if (type === 'win') {
+          [523, 659, 784].forEach((freq, i) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+            osc.start(audioContext.currentTime + i * 0.1);
+            osc.stop(audioContext.currentTime + i * 0.1 + 0.3);
+          });
+        }
+      } catch (e) {
+        // Silently fail if audio context not available
+      }
+    }
+
+    // ===== UTILITY FUNCTIONS =====
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function showFeedback(message, isError = false) {
+      const existingToast = document.querySelector('.feedback-toast');
+      if (existingToast) {
+        existingToast.remove();
+      }
+
+      const toast = document.createElement('div');
+      toast.className = `feedback-toast ${isError ? 'error' : ''}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // ===== GAME FUNCTIONS =====
+    function initLevel(level) {
+      currentLevel = level;
+      const levelData = levelsData[level];
+      timeLeft = levelData.time;
+      totalPairs = levelData.cards.length / 2;
+      matchedPairs = 0;
+      gameActive = true;
+      matchedCardIds = new Set();
+
+      // Mix all cards together and shuffle
+      allCards = shuffleArray([...levelData.cards]);
+
+      // Update UI
+      document.getElementById('currentLevel').textContent = level;
+      document.getElementById('timer').textContent = formatTime(timeLeft);
+      document.getElementById('matches').textContent = '0';
+      document.getElementById('totalMatches').textContent = totalPairs;
+      updateProgress();
+
+      // Update level title
+      const levelTitles = [
+        defaultConfig.level_1_title,
+        defaultConfig.level_2_title,
+        defaultConfig.level_3_title
+      ];
+      document.getElementById('levelTitle').textContent = levelTitles[level - 1];
+
+      // Update board class
+      const board = document.getElementById('gameBoard');
+      board.className = `game-board level-${level}`;
+
+      // Render cards
+      renderCards();
+
+      // Start timer
+      startTimer();
+    }
+
+    function renderCards() {
+      const board = document.getElementById('gameBoard');
+      board.innerHTML = '';
+
+      // Render all cards mixed together
+      allCards.forEach(card => {
+        const cardElement = document.createElement('div');
+        const cardClass = card.type === 'habit' ? 'habit-card' : 'category-card';
+        cardElement.className = `card ${cardClass} draggable`;
+        cardElement.draggable = true;
+        cardElement.dataset.id = card.id;
+        cardElement.dataset.match = card.match;
+        cardElement.dataset.type = card.type;
+        if (card.feedback) {
+          cardElement.dataset.feedback = card.feedback;
+        }
+
+        const badgeText = card.type === 'habit' ? 'H' : 'C';
+
+        cardElement.innerHTML = `
+          <div class="card-badge">${badgeText}</div>
+          <div class="card-icon">${card.icon}</div>
+          <div class="card-text">${card.text}</div>
+        `;
+
+        // Add drag event listeners
+        cardElement.addEventListener('dragstart', handleDragStart);
+        cardElement.addEventListener('dragend', handleDragEnd);
+        cardElement.addEventListener('dragover', handleDragOver);
+        cardElement.addEventListener('dragleave', handleDragLeave);
+        cardElement.addEventListener('drop', handleDrop);
+        
+        // Touch support for mobile
+        cardElement.addEventListener('touchstart', handleTouchStart);
+        cardElement.addEventListener('touchmove', handleTouchMove);
+        cardElement.addEventListener('touchend', handleTouchEnd);
+        
+        board.appendChild(cardElement);
+      });
+    }
+
+    // ===== DRAG AND DROP HANDLERS =====
+    
+    function handleDragStart(e) {
+      if (!gameActive) return;
+      
+      const card = e.currentTarget;
+      
+      if (matchedCardIds.has(parseInt(card.dataset.id))) {
+        e.preventDefault();
+        return;
+      }
+      
+      draggedElement = card;
+      card.classList.add('dragging');
+      
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', card.innerHTML);
+    }
+
+    function handleDragEnd(e) {
+      const card = e.currentTarget;
+      card.classList.remove('dragging');
+    }
+
+    function handleDragOver(e) {
+      if (!gameActive || !draggedElement) return;
+      
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      const dropTarget = e.currentTarget;
+      
+      if (dropTarget === draggedElement || 
+          matchedCardIds.has(parseInt(dropTarget.dataset.id)) || 
+          matchedCardIds.has(parseInt(draggedElement.dataset.id))) {
+        return;
+      }
+      
+      const draggedType = draggedElement.dataset.type;
+      const targetType = dropTarget.dataset.type;
+      
+      if (draggedType !== targetType) {
+        dropTarget.classList.add('drag-over');
+      }
+    }
+
+    function handleDragLeave(e) {
+      const dropTarget = e.currentTarget;
+      dropTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      
+      if (!gameActive || !draggedElement) return;
+      
+      const dropTarget = e.currentTarget;
+      dropTarget.classList.remove('drag-over');
+      
+      if (dropTarget === draggedElement) return;
+      
+      if (matchedCardIds.has(parseInt(dropTarget.dataset.id)) || 
+          matchedCardIds.has(parseInt(draggedElement.dataset.id))) return;
+      
+      const draggedType = draggedElement.dataset.type;
+      const targetType = dropTarget.dataset.type;
+      const draggedMatch = draggedElement.dataset.match;
+      const targetMatch = dropTarget.dataset.match;
+      
+      if (draggedType !== targetType && draggedMatch === targetMatch) {
+        // CORRECT MATCH!
+        playSound('correct');
+        
+        const feedback = draggedElement.dataset.feedback || dropTarget.dataset.feedback || 'Correct match!';
+        showFeedback(feedback, false);
+        
+        draggedElement.classList.add('correct-match');
+        dropTarget.classList.add('correct-match');
+        
+        setTimeout(() => {
+          draggedElement.classList.add('matched');
+          dropTarget.classList.add('matched');
+          draggedElement.classList.remove('correct-match');
+          dropTarget.classList.remove('correct-match');
+          draggedElement.draggable = false;
+          dropTarget.draggable = false;
+          
+          matchedCardIds.add(parseInt(draggedElement.dataset.id));
+          matchedCardIds.add(parseInt(dropTarget.dataset.id));
+          
+          matchedPairs++;
+          updateProgress();
+          
+          draggedElement = null;
+          
+          if (matchedPairs === totalPairs) {
+            levelComplete();
+          }
+        }, 500);
+        
+      } else {
+        // WRONG MATCH!
+        playSound('wrong');
+        
+        if (draggedType === targetType) {
+          showFeedback('Try matching a habit with a category!', true);
+        } else {
+          showFeedback('Not quite! Try another pair.', true);
+        }
+        
+        draggedElement.classList.add('wrong-match');
+        dropTarget.classList.add('wrong-match');
+        
+        setTimeout(() => {
+          draggedElement.classList.remove('wrong-match');
+          dropTarget.classList.remove('wrong-match');
+          
+          draggedElement = null;
+        }, 400);
+      }
+    }
+
+    // ===== TOUCH SUPPORT FOR MOBILE =====
+    let touchStartX, touchStartY;
+    let touchDraggedElement = null;
+    let ghostElement = null;
+
+    function handleTouchStart(e) {
+      if (!gameActive) return;
+      
+      const card = e.currentTarget;
+      
+      if (matchedCardIds.has(parseInt(card.dataset.id))) {
+        return;
+      }
+      
+      touchDraggedElement = card;
+      
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      
+      ghostElement = card.cloneNode(true);
+      ghostElement.style.position = 'fixed';
+      ghostElement.style.pointerEvents = 'none';
+      ghostElement.style.opacity = '0.8';
+      ghostElement.style.zIndex = '1000';
+      ghostElement.style.width = card.offsetWidth + 'px';
+      ghostElement.style.transform = 'rotate(3deg) scale(1.05)';
+      document.body.appendChild(ghostElement);
+      
+      card.style.opacity = '0.3';
+      
+      updateGhostPosition(touch.clientX, touch.clientY);
+    }
+
+    function handleTouchMove(e) {
+      if (!touchDraggedElement || !ghostElement) return;
+      
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      updateGhostPosition(touch.clientX, touch.clientY);
+    }
+
+    function handleTouchEnd(e) {
+      if (!touchDraggedElement) return;
+      
+      const touch = e.changedTouches[0];
+      const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+      
+      if (ghostElement) {
+        ghostElement.remove();
+        ghostElement = null;
+      }
+      
+      touchDraggedElement.style.opacity = '1';
+      
+      let dropTarget = elementUnderTouch;
+      while (dropTarget && !dropTarget.classList.contains('card')) {
+        dropTarget = dropTarget.parentElement;
+      }
+      
+      if (dropTarget && dropTarget.classList.contains('card') && 
+          dropTarget !== touchDraggedElement && 
+          !matchedCardIds.has(parseInt(dropTarget.dataset.id)) && 
+          !matchedCardIds.has(parseInt(touchDraggedElement.dataset.id))) {
+        
+        const draggedType = touchDraggedElement.dataset.type;
+        const targetType = dropTarget.dataset.type;
+        const draggedMatch = touchDraggedElement.dataset.match;
+        const targetMatch = dropTarget.dataset.match;
+        
+        if (draggedType !== targetType && draggedMatch === targetMatch) {
+          playSound('correct');
+          
+          const feedback = touchDraggedElement.dataset.feedback || dropTarget.dataset.feedback || 'Correct match!';
+          showFeedback(feedback, false);
+          
+          touchDraggedElement.classList.add('correct-match');
+          dropTarget.classList.add('correct-match');
+          
+          setTimeout(() => {
+            touchDraggedElement.classList.add('matched');
+            dropTarget.classList.add('matched');
+            touchDraggedElement.classList.remove('correct-match');
+            dropTarget.classList.remove('correct-match');
+            touchDraggedElement.draggable = false;
+            dropTarget.draggable = false;
+            
+            matchedCardIds.add(parseInt(touchDraggedElement.dataset.id));
+            matchedCardIds.add(parseInt(dropTarget.dataset.id));
+            
+            matchedPairs++;
+            updateProgress();
+            
+            touchDraggedElement = null;
+            
+            if (matchedPairs === totalPairs) {
+              levelComplete();
+            }
+          }, 500);
+          
+        } else {
+          playSound('wrong');
+          
+          if (draggedType === targetType) {
+            showFeedback('Try matching a habit with a category!', true);
+          } else {
+            showFeedback('Not quite! Try another pair.', true);
+          }
+          
+          touchDraggedElement.classList.add('wrong-match');
+          dropTarget.classList.add('wrong-match');
+          
+          setTimeout(() => {
+            touchDraggedElement.classList.remove('wrong-match');
+            dropTarget.classList.remove('wrong-match');
+            
+            touchDraggedElement = null;
+          }, 400);
+        }
+      } else {
+        touchDraggedElement = null;
+      }
+    }
+
+    function updateGhostPosition(x, y) {
+      if (!ghostElement) return;
+      
+      ghostElement.style.left = (x - ghostElement.offsetWidth / 2) + 'px';
+      ghostElement.style.top = (y - ghostElement.offsetHeight / 2) + 'px';
+    }
+
+    function updateProgress() {
+      document.getElementById('matches').textContent = matchedPairs;
+      const percentage = (matchedPairs / totalPairs) * 100;
+      const progressFill = document.getElementById('progressFill');
+      progressFill.style.width = `${percentage}%`;
+      progressFill.textContent = `${Math.round(percentage)}%`;
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = formatTime(timeLeft);
+
+        if (timeLeft <= 0) {
+          gameOver();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function levelComplete() {
+      gameActive = false;
+      stopTimer();
+      playSound('win');
+
+      if (currentLevel < 3) {
+        createConfetti();
+        showMessage('🎉', 'Level Complete!', 'Great job matching habits to climate solutions!', 'next');
+      } else {
+        createFireworks();
+        showMessage('🏆', defaultConfig.champion_message, "You've just matched real-world actions to real climate solutions!", 'restart');
+      }
+    }
+
+    function gameOver() {
+      gameActive = false;
+      stopTimer();
+      showMessage('⏱️', defaultConfig.game_over_message, 'Time ran out! Want to try again?', 'retry');
+    }
+
+    function showMessage(icon, text, subtext, actionType) {
+      const overlay = document.getElementById('messageOverlay');
+      const messageIcon = document.getElementById('messageIcon');
+      const messageText = document.getElementById('messageText');
+      const messageSubtext = document.getElementById('messageSubtext');
+      const actionBtn = document.getElementById('actionBtn');
+
+      messageIcon.textContent = icon;
+      messageText.textContent = text;
+      messageSubtext.textContent = subtext;
+
+      if (actionType === 'next') {
+        actionBtn.textContent = defaultConfig.next_level_button_text;
+        actionBtn.className = 'btn btn-next';
+        actionBtn.onclick = () => {
+          overlay.style.display = 'none';
+          initLevel(currentLevel + 1);
+        };
+      } else if (actionType === 'retry') {
+        actionBtn.textContent = defaultConfig.try_again_button_text;
+        actionBtn.className = 'btn btn-retry';
+        actionBtn.onclick = () => {
+          overlay.style.display = 'none';
+          initLevel(currentLevel);
+        };
+      } else if (actionType === 'restart') {
+        actionBtn.textContent = 'Play Again';
+        actionBtn.className = 'btn btn-start';
+        actionBtn.onclick = () => {
+          overlay.style.display = 'none';
+          initLevel(1);
+        };
+      }
+
+      overlay.style.display = 'flex';
+    }
+
+    // ===== ANIMATIONS =====
+    function createConfetti() {
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = '-10px';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    function createFireworks() {
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'];
+      
+      for (let burst = 0; burst < 5; burst++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * (window.innerHeight * 0.5);
+
+          for (let i = 0; i < 30; i++) {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = x + 'px';
+            firework.style.top = y + 'px';
+            firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+            const angle = (Math.PI * 2 * i) / 30;
+            const velocity = 50 + Math.random() * 50;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+
+            firework.style.setProperty('--tx', tx + 'px');
+            firework.style.setProperty('--ty', ty + 'px');
+
+            document.body.appendChild(firework);
+
+            setTimeout(() => firework.remove(), 1000);
+          }
+        }, burst * 400);
+      }
+    }
+
+    // ===== EVENT LISTENERS =====
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('restartBtn').style.display = 'inline-block';
+      initLevel(1);
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      initLevel(currentLevel);
+    });
+
+    // ===== ELEMENT SDK INTEGRATION =====
+    async function onConfigChange(config) {
+      document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+
+      const levelTitles = [
+        config.level_1_title || defaultConfig.level_1_title,
+        config.level_2_title || defaultConfig.level_2_title,
+        config.level_3_title || defaultConfig.level_3_title
+      ];
+      
+      if (currentLevel >= 1 && currentLevel <= 3) {
+        document.getElementById('levelTitle').textContent = levelTitles[currentLevel - 1];
+      }
+
+      const wrapper = document.querySelector('.app-wrapper');
+      wrapper.style.background = `linear-gradient(135deg, ${config.background_color || defaultConfig.background_color} 0%, #764ba2 100%)`;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["level_1_title", config.level_1_title || defaultConfig.level_1_title],
+          ["level_2_title", config.level_2_title || defaultConfig.level_2_title],
+          ["level_3_title", config.level_3_title || defaultConfig.level_3_title],
+          ["start_button_text", config.start_button_text || defaultConfig.start_button_text],
+          ["next_level_button_text", config.next_level_button_text || defaultConfig.next_level_button_text],
+          ["try_again_button_text", config.try_again_button_text || defaultConfig.try_again_button_text],
+          ["champion_message", config.champion_message || defaultConfig.champion_message],
+          ["game_over_message", config.game_over_message || defaultConfig.game_over_message]
+        ])
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e363a92745241b8',t:'MTc3NDY5NjY1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
