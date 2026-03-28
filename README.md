@@ -22,26 +22,27 @@ Flip two cards at a time
 Try to find matching pairs
 Continue until all pairs are correctly matched
 Complete the game in the shortest time or fewest moves
-🚀 Features
-🌍 Climate-focused educational content
-🎮 Simple and engaging gameplay
-⏱️ Timer and move tracking (optional depending on your build)
-📱 Responsive design (playable on desktop & mobile)
-🧠 Improves memory and sustainability knowledge
-🛠️ Tech Stack
+ Features
+ Climate-focused educational content
+ Simple and engaging gameplay
+ Timer and move tracking (optional depending on your build)
+ Responsive design (playable on desktop & mobile)
+ Improves memory and sustainability knowledge
+
+Tech Stack
 HTML5
 CSS3
 JavaScript (or specify framework if used: e.g., React, Vue)
 📂 Project Structure
 sustainability-matchup-game/
-│
-├── index.html
-├── style.css
-├── script.js
-├── assets/
-│   ├── images/
-│   └── icons/
-└── README.md
+
+ index.html
+ style.css
+ script.js
+ assets
+ images
+ icons
+ README.md
  Installation & Setup
 Clone the repository:
 git clone https://github.com/your-username/sustainability-matchup-game.git
